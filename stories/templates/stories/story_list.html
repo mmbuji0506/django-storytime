@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Storytime for Kids</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: url('/static/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            text-align: center;
+            color: #333;
+        }
+        h1 {
+            color: #ff69b4;
+            animation: bounce 2s infinite;
+            text-shadow: 2px 2px #87ceeb;
+        }
+        ul {
+            list-style-type: none;
+        }
+        li {
+            margin: 15px;
+        }
+        a {
+            text-decoration: none;
+            color: #4682b4;
+            font-size: 1.5em;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px 10px;
+            border-radius: 10px;
+        }
+        a:hover {
+            color: #ff69b4;
+        }
+        .create-btn, .random-btn, .filter-btn {
+            padding: 15px 30px;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.5em;
+            display: inline-block;
+            margin: 10px;
+            transition: transform 0.3s;
+        }
+        .create-btn {
+            background-color: #87ceeb;
+            box-shadow: 0 4px #4682b4;
+        }
+        .random-btn {
+            background-color: #98fb98;
+            box-shadow: 0 4px #32cd32;
+        }
+        .filter-btn {
+            background-color: {% if show_favorites %}#ff69b4{% else %}#d3d3d3{% endif %};
+            box-shadow: 0 4px {% if show_favorites %}#ff1493{% else %}#a9a9a9{% endif %};
+        }
+        .create-btn:hover {
+            background-color: #ff69b4;
+            transform: scale(1.1);
+            box-shadow: 0 4px #ff1493;
+        }
+        .random-btn:hover {
+            background-color: #32cd32;
+            transform: scale(1.1);
+            box-shadow: 0 4px #228b22;
+        }
+        .filter-btn:hover {
+            transform: scale(1.1);
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Storytime!</h1>
+    <p style="font-size: 1.2em; color: #4682b4;">You’ve created {{ story_count }} stories!</p>
+    <ul>
+        {% for story in stories %}
+            <li>
+                <a href="{% url 'story_detail' story.id %}">
+                    {{ story.title }}{% if story.is_favorite %} 🌟{% endif %}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'create_story' %}" class="create-btn">Create a New Story</a>
+    <a href="{% url 'random_story' %}" class="random-btn">Pick a Random Story</a>
+    <a href="?favorites={% if show_favorites %}false{% else %}true{% endif %}" class="filter-btn">
+        {% if show_favorites %}Show All{% else %}Show Favorites{% endif %}
+    </a>
+</body>
+</html>

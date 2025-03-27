@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ story.title }}</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: url('/static/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            text-align: center;
+            color: #333;
+        }
+        h1 {
+            color: #ff69b4;
+            font-size: 2.5em;
+            animation: bounce 2s infinite;
+            text-shadow: 2px 2px #87ceeb;
+        }
+        p {
+            font-size: 1.2em;
+            line-height: 1.5;
+            margin: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        img {
+            max-width: 300px;
+            border: 5px solid #87ceeb;
+            border-radius: 15px;
+            transition: transform 0.3s;
+        }
+        img:hover {
+            transform: rotate(5deg) scale(1.05);
+        }
+        audio {
+            margin-top: 20px;
+        }
+        .home-btn, .favorite-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2em;
+            display: inline-block;
+            margin: 10px;
+            transition: transform 0.3s;
+        }
+        .home-btn {
+            background-color: #ffa500;
+            box-shadow: 0 4px #ff8c00;
+        }
+        .home-btn:hover {
+            background-color: #ff4500;
+            transform: scale(1.1);
+            box-shadow: 0 4px #ff4500;
+        }
+        .favorite-btn {
+            background-color: {% if story.is_favorite %}#ff69b4{% else %}#d3d3d3{% endif %};
+            box-shadow: 0 4px {% if story.is_favorite %}#ff1493{% else %}#a9a9a9{% endif %};
+        }
+        .favorite-btn:hover {
+            transform: scale(1.1);
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+        .read-aloud-btn {
+            background-color: #98fb98;
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2em;
+            display: inline-block;
+            margin: 10px;
+            transition: transform 0.3s;
+            box-shadow: 0 4px #32cd32;
+        }
+        .read-aloud-btn:hover {
+            background-color: #32cd32;
+            transform: scale(1.1);
+            box-shadow: 0 4px #228b22;
+        }
+        img {
+            max-width: 300px;
+            border: 5px solid #87ceeb;
+            border-radius: 15px;
+            transition: transform 0.3s, opacity 0.5s;
+        }
+        img:hover {
+            transform: rotate(5deg) scale(1.05);
+        }
+        .fade-out {
+            opacity: 0;
+        }
+        .fade-in {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ story.title }}</h1>
+    {% if story.image %}
+        <img id="story-image" src="{{ story.image.url }}" alt="{{ story.title }}">
+    {% endif %}
+    <p>{{ story.content }}</p>
+    <audio id="story-audio" controls>
+        <source src="{{ audio_url }}" type="audio/mp3">
+        Your browser does not support the audio element.
+    </audio>
+    <audio id="chime-audio" autoplay>
+        <source src="/static/chime.mp3" type="audio/mp3">
+    </audio>
+    <audio id="sparkle-audio">
+        <source src="/static/sparkle.mp3" type="audio/mp3">
+    </audio>
+    <button class="read-aloud-btn" onclick="playAudio()">Read Aloud</button>
+    <a href="{% url 'toggle_favorite' story.id %}" class="favorite-btn">
+        {% if story.is_favorite %}Unfavorite{% else %}Favorite{% endif %}
+    </a>
+    <a href="{% url 'story_list' %}" class="home-btn">Back to Home</a>
+    <script>
+        const audio = document.getElementById('story-audio');
+        const image = document.getElementById('story-image');
+        const imageBase = "{{ story.image.url }}".replace('_page1.jpg', '');
+        const pages = [
+            `${imageBase}_page1.jpg`,
+            `${imageBase}_page2.jpg`,
+            `${imageBase}_page3.jpg`
+        ];
+        let currentPage = 0;
+
+        function playAudio() {
+            audio.play();
+            document.getElementById('sparkle-audio').play();
+        }
+
+        audio.addEventListener('timeupdate', () => {
+            const duration = audio.duration;
+            const currentTime = audio.currentTime;
+            const pageDuration = duration / pages.length;
+            const newPage = Math.floor(currentTime / pageDuration);
+            if (newPage !== currentPage && newPage < pages.length) {
+                image.classList.add('fade-out');
+                setTimeout(() => {
+                    image.src = pages[newPage];
+                    image.classList.remove('fade-out');
+                    image.classList.add('fade-in');
+                    currentPage = newPage;
+                }, 500);  // Match fade duration
+            }
+        });
+    </script>
+</body>
+</html>

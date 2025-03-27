@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create a New Story</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+        }
+        h1 {
+            color: #ff69b4;
+        }
+        button {
+            background-color: #87ceeb;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.5em;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ff69b4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Make a New Story!</h1>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Generate Story</button>
+    </form>
+    <p><a href="{% url 'story_list' %}">Back to Stories</a></p>
+</body>
+</html>
