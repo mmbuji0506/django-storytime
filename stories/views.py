@@ -5,22 +5,22 @@ import pyttsx3
 import os
 import random
 
-def generate_placeholder_image(story_id, title):
-    colors = [(135, 206, 235), (255, 182, 193), (144, 238, 144)]  # Sky blue, pink, light green
-    image_paths = []
-    for i, color in enumerate(colors, 1):
-        img = Image.new('RGB', (300, 200), color=color)
-        draw = ImageDraw.Draw(img)
-        try:
-            font = ImageFont.truetype("comic.ttf", 20)
-        except:
-            font = ImageFont.load_default()
-        draw.text((10, 90), f"{title} - Page {i}", font=font, fill=(255, 255, 255))
-        image_path = f"media/story_images/{story_id}_page{i}.jpg"
-        os.makedirs(os.path.dirname(image_path), exist_ok=True)
-        img.save(image_path)
-        image_paths.append(f"story_images/{story_id}_page{i}.jpg")
-    return image_paths[0]
+def generate_placeholder_image(story_id, title, page_num, text_snippet):
+    colors = [(135, 206, 235), (255, 182, 193), (144, 238, 144)]  # Blue, pink, green
+    img = Image.new('RGB', (300, 200), color=colors[page_num - 1])
+    draw = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.truetype("comic.ttf", 16)
+    except:
+        font = ImageFont.load_default()
+    # Shorten text for image
+    short_text = text_snippet[:20] + "..." if len(text_snippet) > 20 else text_snippet
+    draw.text((10, 80), f"{title} - Page {page_num}", font=font, fill=(255, 255, 255))
+    draw.text((10, 120), short_text, font=font, fill=(255, 255, 255))
+    image_path = f"media/story_images/{story_id}_page{page_num}.jpg"
+    os.makedirs(os.path.dirname(image_path), exist_ok=True)
+    img.save(image_path)
+    return f"story_images/{story_id}_page{page_num}.jpg"
 
 def generate_story():
     stories = [
@@ -60,6 +60,7 @@ def create_story(request):
         title, content = generate_story()
         story = Story.objects.create(title=title, content=content)
         
+        # Generate audio
         audio_path = f"media/audio/{story.id}.mp3"
         os.makedirs(os.path.dirname(audio_path), exist_ok=True)
         engine = pyttsx3.init()
@@ -73,8 +74,13 @@ def create_story(request):
         engine.save_to_file(story.content, audio_path)
         engine.runAndWait()
         
-        image_path = generate_placeholder_image(story.id, story.title)
-        story.image = image_path  # Store first image in model
+        # Split content into pages and generate images
+        sentences = content.split('. ')
+        pages = [sentences[i:i+2] for i in range(0, len(sentences), 2)]  # 2 sentences per page
+        for i, page in enumerate(pages, 1):
+            text_snippet = ' '.join(page)
+            generate_placeholder_image(story.id, story.title, i, text_snippet)
+        story.image = f"story_images/{story.id}_page1.jpg"  # Default to first image
         story.save()
         
         return redirect('story_detail', story_id=story.id)

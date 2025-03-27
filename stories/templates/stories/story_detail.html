@@ -28,15 +28,18 @@
             max-width: 300px;
             border: 5px solid #87ceeb;
             border-radius: 15px;
-            transition: transform 0.3s;
+            transition: opacity 0.5s;
         }
         img:hover {
             transform: rotate(5deg) scale(1.05);
         }
-        audio {
-            margin-top: 20px;
+        .fade-out {
+            opacity: 0;
         }
-        .home-btn, .favorite-btn {
+        .fade-in {
+            opacity: 1;
+        }
+        .read-aloud-btn, .favorite-btn, .home-btn {
             padding: 10px 20px;
             border-radius: 10px;
             color: white;
@@ -44,6 +47,22 @@
             display: inline-block;
             margin: 10px;
             transition: transform 0.3s;
+        }
+        .read-aloud-btn {
+            background-color: #98fb98;
+            box-shadow: 0 4px #32cd32;
+        }
+        .read-aloud-btn:hover {
+            background-color: #32cd32;
+            transform: scale(1.1);
+            box-shadow: 0 4px #228b22;
+        }
+        .favorite-btn {
+            background-color: {% if story.is_favorite %}#ff69b4{% else %}#d3d3d3{% endif %};
+            box-shadow: 0 4px {% if story.is_favorite %}#ff1493{% else %}#a9a9a9{% endif %};
+        }
+        .favorite-btn:hover {
+            transform: scale(1.1);
         }
         .home-btn {
             background-color: #ffa500;
@@ -54,48 +73,10 @@
             transform: scale(1.1);
             box-shadow: 0 4px #ff4500;
         }
-        .favorite-btn {
-            background-color: {% if story.is_favorite %}#ff69b4{% else %}#d3d3d3{% endif %};
-            box-shadow: 0 4px {% if story.is_favorite %}#ff1493{% else %}#a9a9a9{% endif %};
-        }
-        .favorite-btn:hover {
-            transform: scale(1.1);
-        }
         @keyframes bounce {
             0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
             40% { transform: translateY(-20px); }
             60% { transform: translateY(-10px); }
-        }
-        .read-aloud-btn {
-            background-color: #98fb98;
-            padding: 10px 20px;
-            border-radius: 10px;
-            color: white;
-            font-size: 1.2em;
-            display: inline-block;
-            margin: 10px;
-            transition: transform 0.3s;
-            box-shadow: 0 4px #32cd32;
-        }
-        .read-aloud-btn:hover {
-            background-color: #32cd32;
-            transform: scale(1.1);
-            box-shadow: 0 4px #228b22;
-        }
-        img {
-            max-width: 300px;
-            border: 5px solid #87ceeb;
-            border-radius: 15px;
-            transition: transform 0.3s, opacity 0.5s;
-        }
-        img:hover {
-            transform: rotate(5deg) scale(1.05);
-        }
-        .fade-out {
-            opacity: 0;
-        }
-        .fade-in {
-            opacity: 1;
         }
     </style>
 </head>
@@ -124,11 +105,16 @@
         const audio = document.getElementById('story-audio');
         const image = document.getElementById('story-image');
         const imageBase = "{{ story.image.url }}".replace('_page1.jpg', '');
+        // Dynamically determine page count (assuming 3 for now; could fetch from server)
         const pages = [
             `${imageBase}_page1.jpg`,
             `${imageBase}_page2.jpg`,
             `${imageBase}_page3.jpg`
-        ];
+        ].filter(page => {
+            // Check if image exists (simplified; ideally server-side)
+            return true; // Adjust if you have a way to verify file existence
+        });
+
         let currentPage = 0;
 
         function playAudio() {
@@ -136,20 +122,23 @@
             document.getElementById('sparkle-audio').play();
         }
 
-        audio.addEventListener('timeupdate', () => {
+        audio.addEventListener('loadedmetadata', () => {
             const duration = audio.duration;
-            const currentTime = audio.currentTime;
             const pageDuration = duration / pages.length;
-            const newPage = Math.floor(currentTime / pageDuration);
-            if (newPage !== currentPage && newPage < pages.length) {
-                image.classList.add('fade-out');
-                setTimeout(() => {
-                    image.src = pages[newPage];
-                    image.classList.remove('fade-out');
-                    image.classList.add('fade-in');
-                    currentPage = newPage;
-                }, 500);  // Match fade duration
-            }
+            audio.addEventListener('timeupdate', () => {
+                const currentTime = audio.currentTime;
+                const newPage = Math.floor(currentTime / pageDuration);
+                if (newPage !== currentPage && newPage < pages.length) {
+                    image.classList.add('fade-out');
+                    setTimeout(() => {
+                        image.src = pages[newPage];
+                        image.classList.remove('fade-out');
+                        image.classList.add('fade-in');
+                        setTimeout(() => image.classList.remove('fade-in'), 500); // Reset fade-in
+                        currentPage = newPage;
+                    }, 500); // Sync with CSS transition
+                }
+            });
         });
     </script>
 </body>
